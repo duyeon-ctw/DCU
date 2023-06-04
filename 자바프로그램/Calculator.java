@@ -1,102 +1,109 @@
-import javax.swing.*;
+package ch09;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.ActionListener;  // ActionListener 임포트
+import javax.swing.*;
 
-public class CalculatorGUI {
-    private JFrame frame;
-    private JTextField textField;
+public class Calculator extends JFrame {
+
+    JTextField display;
+    JLabel history;
+    JPanel panel;
+    JButton button;
+    double operand1 = 0.0, operand2 = 0.0;
+    String operator = "";
+
+    Calculator() {
+        // 계산기 프레임 설정
+        this.setBounds(100, 100, 300, 500);
+        this.setTitle("계산기");
+        this.setLayout(new BorderLayout());
+        display = new JTextField(30);
+        display.setText("0");
+        display.setFont(new Font("궁서체", Font.BOLD, 35));
+        display.setHorizontalAlignment( SwingConstants.RIGHT );
+        this.add(display, BorderLayout.NORTH);
+
+        // 버튼 패널 설정
+        panel = new JPanel();
+        panel.setLayout(new GridLayout(6,4));
+
+        addButton("%", e -> display.setText(Double.parseDouble(display.getText()) / 100 + ""));
+        addButton("CE", e -> display.setText("0"));
+        addButton("C", e -> display.setText("0"));
+        addButton("<-", e -> display.setText(display.getText().substring(0, display.getText().length() - 1)));
+        addButton("1/x", e -> display.setText(1.0 / Double.parseDouble(display.getText()) + ""));
+        addButton("x^2", e -> display.setText(Math.pow(Double.parseDouble(display.getText()), 2) + ""));
+        addButton("sqrt", e -> display.setText(Math.sqrt(Double.parseDouble(display.getText())) + ""));
+        addButton("/", e -> performOperation("/"));
+        addNumberButton("7");
+        addNumberButton("8");
+        addNumberButton("9");
+        addButton("*", e -> performOperation("*"));
+        addNumberButton("4");
+        addNumberButton("5");
+        addNumberButton("6");
+        addButton("-", e -> performOperation("-"));
+        addNumberButton("1");
+        addNumberButton("2");
+        addNumberButton("3");
+        addButton("+", e -> performOperation("+"));
+        addButton("+/-", e -> display.setText(Double.parseDouble(display.getText()) * -1 + ""));
+        addNumberButton("0");
+        addButton(".", e -> {
+            if (!display.getText().contains(".")) {
+                display.setText(display.getText() + ".");
+            }
+        });
+        addButton("=", e -> calculateResult());
+
+        this.add(panel, BorderLayout.CENTER);
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setVisible(true);
+    }
+
+    private void addButton(String title, ActionListener listener) {
+        button = new JButton(title);
+        button.addActionListener(listener);
+        panel.add(button);
+    }
+
+    private void addNumberButton(String number) {
+        addButton(number, e -> {
+            if (display.getText().equals("0")) {
+                display.setText(number);
+            } else {
+                display.setText(display.getText() + number);
+            }
+        });
+    }
+
+    private void performOperation(String operation) {
+        operand1 = Double.parseDouble(display.getText());
+        display.setText("0");
+        operator = operation;
+    }
+
+    private void calculateResult() {
+        operand2 = Double.parseDouble(display.getText());
+        double result = 0;
+        switch (operator) {
+            case "+":
+                result = operand1 + operand2;
+                break;
+            case "-":
+                result = operand1 - operand2;
+                break;
+            case "*":
+                result = operand1 * operand2;
+                break;
+            case "/":
+                result = operand1 / operand2;
+                break;
+        }
+        display.setText(Double.toString(result));
+    }
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    CalculatorGUI window = new CalculatorGUI();
-                    window.frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public CalculatorGUI() {
-        initialize();
-    }
-
-    private void initialize() {
-        frame = new JFrame();
-        frame.setBounds(100, 100, 250, 350);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(null);
-
-        textField = new JTextField();
-        textField.setBounds(20, 10, 200, 30);
-        frame.getContentPane().add(textField);
-        textField.setColumns(10);
-
-        // Creating number buttons and operations
-        int bookX = 20;
-        int bookY = 50;
-        int bookW = 50;
-        int bookH = 50;
-
-        for (int i = 9; i >= 0; i--) {
-            String buttonText = String.valueOf(i);
-
-            JButton button = new JButton(buttonText);
-            button.setBounds(bookX, bookY, bookW, bookH);
-            frame.getContentPane().add(button);
-
-            button.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    String existingText = textField.getText();
-                    textField.setText(existingText + buttonText);
-                }
-            });
-
-            bookX += 60;
-
-            if (bookX >= 200) {
-                bookX = 20;
-                bookY += 60;
-            }
-        }
-
-        // Adding operation buttons
-        JButton addButton = new JButton("+");
-        addButton.setBounds(20, 230, 50, 50);
-        frame.getContentPane().add(addButton);
-
-        // When operation button clicked, add it to the textField
-        addButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                textField.setText(textField.getText() + "+");
-            }
-        });
-
-        JButton eqButton = new JButton("=");
-        eqButton.setBounds(140, 230, 50, 50);
-        frame.getContentPane().add(eqButton);
-
-        // When equals button clicked, compute the result
-        eqButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                computeResult();
-            }
-        });
-    }
-
-    private void computeResult() {
-        String[] operation = textField.getText().split("\\+");
-        if (operation.length == 2) {
-            int num1 = Integer.parseInt(operation[0]);
-            int num2 = Integer.parseInt(operation[1]);
-            int result = num1 + num2;
-
-            textField.setText(String.valueOf(result));
-        } else {
-            textField.setText("Error");
-        }
+        new Calculator();
     }
 }
